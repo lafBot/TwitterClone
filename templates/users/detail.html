@@ -31,7 +31,7 @@
           </li>
           <li class="stat">
             <p class="small">Likes</p>
-            <h4><a href="/users/{{ user.id }}/likes"> {{ g.user.likes | count }} </a></h4>
+            <h4><a href="/users/{{ user.id }}/likes"> {{ user.likes | count }} </a></h4>
           </li>
           <div class="ml-auto">
             {% if g.user.id == user.id %}
@@ -61,19 +61,11 @@
   <div class="col-sm-3">
     <h4 id="sidebar-username">@{{ user.username }}</h4>
     <p>
-      {% if user.bio %}
         {{ user.bio }}
-      {% else %}
-        <a href="/users/{{ user.id }}/edit">Edit your profile to add a bio!</a>
-      {% endif %}
     </p>
 
     <p class="user-location"><span class="fa fa-map-marker"></span>
-      {% if user.bio %}
         {{ user.location }}
-      {% else %}
-        <a href="/users/{{ user.id }}/edit">Add your location</a>
-      {% endif %}
     </p>
   </div>
 

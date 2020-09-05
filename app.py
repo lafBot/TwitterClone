@@ -218,27 +218,25 @@ def profile():
         flash("Access unauthorized.", "danger")
         return redirect("/")
     
+    user = g.user
     form = UserEditForm()
+
     if form.validate_on_submit():
-        user = User.authenticate(g.user.username, form.password.data)
+        if User.authenticate(g.user.username, form.password.data):
 
-        updated_user = User.query.get_or_404(g.user.id)
-        updated_user.username = form.username.data
-        updated_user.email = form.email.data
-        if form.image_url.data:
-            updated_user.image_url = form.image_url.data
-        if form.header_image_url.data:
-            updated_user.header_image_url = form.header_image_url.data
-        if form.bio.data:
-            updated_user.bio = form.bio.data
-        db.session.commit()
+            user.username = form.username.data
+            user.email = form.email.data
+            user.image_url = form.image_url.data or "/static/images/default-pic.png"
+            user.header_image_url = form.header_image_url.data or "/static/images/warbler-hero.jpg"
+            user.location = form.location.data
+            user.bio = form.bio.data
 
-        if user:
+            db.session.commit()
             flash("You have successfully updated your profile", "success")
-            return redirect(f"/users/{g.user.id}")
+            return redirect(f"/users/{user.id}")
         else:
             flash("That is the incorrect password", "danger")
-            return redirect(f"/users/{g.user.id}")
+            return redirect(f"/users/{user.id}")
     
     return render_template('/users/edit.html', form=form)
 
@@ -317,7 +315,8 @@ def add_like(msg_id):
         return redirect("/")
 
     msg = Message.query.get_or_404(msg_id)
-    if msg_id != g.user.id:
+
+    if msg.user_id != g.user.id:
         if msg in g.user.likes:
             g.user.likes = [like for like in g.user.likes if like != msg]
             
@@ -327,6 +326,9 @@ def add_like(msg_id):
         db.session.commit()
         
         return redirect('/')
+        
+    else:
+        return abort(403)
 
 @app.route('/users/<int:user_id>/likes', methods=["GET"])
 def user_likes(user_id):
@@ -352,8 +354,11 @@ def homepage():
     """
 
     if g.user:
+        following_ids = [f.id for f in g.user.following] + [g.user.id]
+
         messages = (Message
                     .query
+                    .filter(Message.user_id.in_(following_ids))
                     .order_by(Message.timestamp.desc())
                     .limit(100)
                     .all())

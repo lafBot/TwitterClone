@@ -1,9 +1,3 @@
-
-
-
-
-
-
 """User model tests."""
 
 # run these tests like:
